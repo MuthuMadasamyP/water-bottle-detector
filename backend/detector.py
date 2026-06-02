@@ -12,8 +12,7 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 class BottleDetector:
     """Loads a YOLO model and runs inference on single frames."""
 
-    DEFAULT_MODEL = Path(__file__).parent / "models" / "best.pt"
-
+    DEFAULT_MODEL = Path(__file__).parent.parent / "models" / "best.pt"
     def __init__(self, model_path: str | None = None, conf=0.5):
         self.conf       = conf
         self.model      = None
