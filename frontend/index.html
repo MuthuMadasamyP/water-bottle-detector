@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bottle Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="header">
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 4h8l3 6v14a2 2 0 01-2 2H11a2 2 0 01-2-2V10l3-6z" stroke="#00ff88" stroke-width="1.5" fill="none"/>
+        <ellipse cx="16" cy="10" rx="4" ry="1.5" stroke="#00ff88" stroke-width="1"/>
+        <path d="M11 16c3-2 7-2 10 0" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M11 20c3-2 7-2 10 0" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span class="logo-text">BOTTLE <span class="accent">DETECTOR</span></span>
+    </div>
+    <div class="header-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-label" id="statusLabel">OFFLINE</span>
+    </div>
+    <div class="header-right">
+      <span class="sys-info">YOLOv8 DETECTION ENGINE</span>
+    </div>
+  </header>
+
+  <!-- ── Main layout ─────────────────────────────────────── -->
+  <main class="layout">
+
+    <!-- ── Left sidebar: Dashboard ─────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-title">SYSTEM DASHBOARD</div>
+
+      <!-- Mode switcher -->
+      <div class="mode-switcher">
+        <button class="mode-btn active" id="btnWebcam" onclick="setMode('webcam')">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M2 12C2 12 5 5 12 5s10 7 10 7-3 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          LIVE CAM
+        </button>
+        <button class="mode-btn" id="btnVideo" onclick="setMode('video')">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="15" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+            <path d="M17 9l5-3v12l-5-3V9z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          UPLOAD VIDEO
+        </button>
+      </div>
+
+      <!-- Stats cards -->
+      <div class="stat-card stat-card--primary">
+        <div class="stat-label">CURRENT WATER BOTTLE COUNT</div>
+        <div class="stat-value" id="bottleCount">0</div>
+        <div class="stat-unit">bottles in frame</div>
+        <div class="stat-bar"><div class="stat-bar-fill" id="frameBar"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">SESSION TIME</div>
+        <div class="stat-value mono" id="sessionTime">00:00</div>
+        <div class="stat-unit">mm:ss</div>
+      </div>
+
+      <!-- History chart -->
+      <div class="chart-panel">
+        <div class="chart-label">DETECTION HISTORY</div>
+        <canvas id="historyChart" width="220" height="80"></canvas>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-panel">
+        <button class="ctrl-btn ctrl-btn--start" id="startBtn" onclick="handleStart()">
+          <span class="btn-icon">▶</span> START
+        </button>
+        <button class="ctrl-btn ctrl-btn--stop" id="stopBtn" onclick="handleStop()" disabled>
+          <span class="btn-icon">■</span> STOP
+        </button>
+        <button class="ctrl-btn ctrl-btn--reset" onclick="handleReset()">
+          <span class="btn-icon">↺</span> RESET
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Centre: Feed + Upload ───────────────────────── -->
+    <section class="feed-section">
+
+      <!-- Webcam panel -->
+      <div class="feed-panel" id="webcamPanel">
+        <div class="feed-header">
+          <span class="feed-title">LIVE CAMERA FEED</span>
+          <div class="feed-indicators">
+            <span class="indicator blink" id="recIndicator">● REC</span>
+            <span class="indicator" id="fpsIndicator">0 FPS</span>
+          </div>
+        </div>
+        <div class="video-wrapper">
+          <video id="rawVideo" autoplay muted playsinline class="hidden"></video>
+          <canvas id="displayCanvas" class="feed-canvas"></canvas>
+          <div class="feed-overlay" id="feedOverlay">
+            <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="5" stroke="#00ff88" stroke-width="1.5"/>
+              <path d="M2 12h2M20 12h2M12 2v2M12 20v2" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <p>Click <strong>START</strong> to begin live detection</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video upload panel -->
+      <div class="feed-panel hidden" id="videoPanel">
+        <div class="feed-header">
+          <span class="feed-title">VIDEO ANALYSIS</span>
+          <div class="feed-indicators">
+            <span class="indicator" id="progressIndicator">READY</span>
+          </div>
+        </div>
+        <div class="drop-zone" id="dropZone">
+          <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>Drop video here or <label class="file-label" for="fileInput">browse</label></p>
+          <p class="drop-hint">MP4 · AVI · MOV · MKV</p>
+          <input type="file" id="fileInput" accept="video/*" class="hidden" onchange="handleFileSelect(event)"/>
+        </div>
+        <div class="video-wrapper hidden" id="videoWrapper">
+          <canvas id="videoCanvas" class="feed-canvas"></canvas>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+        <div class="file-info hidden" id="fileInfo">
+          <span id="fileName">—</span>
+          <button class="clear-btn" onclick="clearVideo()">✕ CLEAR</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <canvas id="captureCanvas" class="hidden"></canvas>
+  <script src="/static/app.js?v=20260527-display-fix"></script>
+</body>
+</html>
