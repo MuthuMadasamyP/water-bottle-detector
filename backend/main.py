@@ -15,8 +15,7 @@ import numpy as np
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-
-from detector import BottleDetector
+from backend.detector import BottleDetector
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
