@@ -2,7 +2,7 @@
 Water Bottle Detector — wraps a trained YOLO model.
 Place your trained model at:  backend/models/11n.pt
 """
-
+from detector import BottleDetector
 import cv2
 import numpy as np
 from pathlib import Path
